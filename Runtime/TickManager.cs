@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace UnityTickDispatcher
 {
-    [DefaultExecutionOrder(-1000)]
     public sealed class TickManager : MonoBehaviour
     {
         private static readonly ActionDisposable NoopDisposable = new ActionDisposable(null);
