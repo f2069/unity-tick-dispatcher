@@ -8,6 +8,24 @@ A small extension that allows you to use a single Update/FixedUpdate/etc.
 - Ability to clear internal queues and tighten memory when necessary;
 - Not thread-safe.
 
+## Installation
+
+*Requires Unity 2022.3+*
+
+### Install via UPM (using Git URL)
+
+1. Navigate to your project's Packages folder and open the manifest.json file.
+2. Add this line to "dependencies"
+    
+```json itle="Packages/manifest.json"
+{
+    "dependencies": {
+        "com.f2069.unitytickdispatcher": "https://github.com/f2069/unity-tick-dispatcher.git#1.0.0",
+        // other dependencies
+    }
+}
+```
+
 ## Usage
 
 - add `TickManager` component to your `Bootstrap` scene in `DontDestroyOnLoad` block;
@@ -108,19 +126,3 @@ private void InProjectGarbageCollect()
 }
 ```
 
-## Installation
-
-*Requires Unity 2022.3+*
-
-### Install via UPM (using Git URL)
-
-1. Navigate to your project's Packages folder and open the manifest.json file.
-2. Add this line to "dependencies"
-
-```json itle="Packages/manifest.json"
-{
-    "dependencies": {
-        "com.f2069.unitytickdispatcher": "https://github.com/f2069/unity-tick-dispatcher.git#1.0.0"
-    }
-}
-```
