@@ -143,7 +143,7 @@ namespace UnityTickDispatcher
 
             _canBeTrim = false;
 
-            RemoveNulls(_ticks);
+            _ticks.RemoveNulls();
             _ticks.TrimExcess();
 
             _ticks.Capacity = _ticks.Capacity < InitialTicksCapacity
@@ -158,18 +158,6 @@ namespace UnityTickDispatcher
             _returnToPoolBuffer.Capacity = _returnToPoolBuffer.Capacity < InitialBufferCapacity
                 ? InitialBufferCapacity
                 : _returnToPoolBuffer.Capacity;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void RemoveNulls<T>(List<T> target)
-        {
-            for (var i = target.Count - 1; i >= 0; i--)
-            {
-                if (target[i] == null)
-                {
-                    target.RemoveAt(i);
-                }
-            }
         }
     }
 }

@@ -5,10 +5,11 @@ namespace UnityTickDispatcher
 {
     public sealed class TickManager : MonoBehaviour
     {
-        [SerializeField] private PlayerLoopTiming loopTiming = PlayerLoopTiming.FixedUpdate | PlayerLoopTiming.Update;
+        [SerializeField] private LoopTiming loopTiming = LoopTiming.FixedUpdate | LoopTiming.Update;
+
+        public static bool IsInitialized => _instance != null;
 
         private static readonly ActionDisposable NoopDisposable = new ActionDisposable(null);
-        private static bool IsInitialized => _instance != null;
         private static TickManager _instance;
 
         private TickPool _tickPool;
@@ -17,7 +18,7 @@ namespace UnityTickDispatcher
         private TickProcessing _lateUpdateProcessing;
         private TickProcessing _lastUpdateProcessing;
         private TickProcessing _lastLateUpdateProcessing;
-        private PlayerLoopTiming _loopTiming;
+        private LoopTiming _loopTiming;
 
         #if UNITY_EDITOR
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -39,11 +40,11 @@ namespace UnityTickDispatcher
             _loopTiming = loopTiming;
 
             _tickPool = new TickPool();
-            _fixedProcessing = FastContains(_loopTiming, PlayerLoopTiming.FixedUpdate) ? new TickProcessing(_tickPool) : null;
-            _updateProcessing = FastContains(_loopTiming, PlayerLoopTiming.Update) ? new TickProcessing(_tickPool) : null;
-            _lastUpdateProcessing = FastContains(_loopTiming, PlayerLoopTiming.LastUpdate) ? new TickProcessing(_tickPool) : null;
-            _lateUpdateProcessing = FastContains(_loopTiming, PlayerLoopTiming.LateUpdate) ? new TickProcessing(_tickPool) : null;
-            _lastLateUpdateProcessing = FastContains(_loopTiming, PlayerLoopTiming.LastLateUpdate) ? new TickProcessing(_tickPool) : null;
+            _fixedProcessing = _loopTiming.Contains(LoopTiming.FixedUpdate) ? new TickProcessing(_tickPool) : null;
+            _updateProcessing = _loopTiming.Contains(LoopTiming.Update) ? new TickProcessing(_tickPool) : null;
+            _lastUpdateProcessing = _loopTiming.Contains(LoopTiming.LastUpdate) ? new TickProcessing(_tickPool) : null;
+            _lateUpdateProcessing = _loopTiming.Contains(LoopTiming.LateUpdate) ? new TickProcessing(_tickPool) : null;
+            _lastLateUpdateProcessing = _loopTiming.Contains(LoopTiming.LastLateUpdate) ? new TickProcessing(_tickPool) : null;
         }
 
         private void FixedUpdate()
@@ -72,16 +73,21 @@ namespace UnityTickDispatcher
             }
         }
 
-        public void Optimize()
+        public static void Optimize()
         {
-            _fixedProcessing?.Optimize();
-            _updateProcessing?.Optimize();
-            _lastUpdateProcessing?.Optimize();
-            _lateUpdateProcessing?.Optimize();
-            _lastLateUpdateProcessing?.Optimize();
+            if (!IsInitialized)
+            {
+                return;
+            }
+
+            _instance._fixedProcessing?.Optimize();
+            _instance._updateProcessing?.Optimize();
+            _instance._lastUpdateProcessing?.Optimize();
+            _instance._lateUpdateProcessing?.Optimize();
+            _instance._lastLateUpdateProcessing?.Optimize();
         }
 
-        public static IDisposable Subscribe(Action action, PlayerLoopTiming loopTiming = PlayerLoopTiming.Update)
+        public static IDisposable Subscribe(Action action, LoopTiming loopTiming = LoopTiming.Update)
         {
             if (!IsInitialized)
             {
@@ -90,19 +96,19 @@ namespace UnityTickDispatcher
 
             var processing = loopTiming switch
             {
-                PlayerLoopTiming.FixedUpdate => _instance._fixedProcessing,
-                PlayerLoopTiming.Update => _instance._updateProcessing,
-                PlayerLoopTiming.LastUpdate => _instance._lastUpdateProcessing,
-                PlayerLoopTiming.LateUpdate => _instance._lateUpdateProcessing,
-                PlayerLoopTiming.LastLateUpdate => _instance._lastLateUpdateProcessing,
+                LoopTiming.FixedUpdate => _instance._fixedProcessing,
+                LoopTiming.Update => _instance._updateProcessing,
+                LoopTiming.LastUpdate => _instance._lastUpdateProcessing,
+                LoopTiming.LateUpdate => _instance._lateUpdateProcessing,
+                LoopTiming.LastLateUpdate => _instance._lastLateUpdateProcessing,
 
                 _ => null
             };
 
-            return processing == null ? NoopDisposable : processing.Add(action);
+            return processing?.Add(action) ?? NoopDisposable;
         }
 
-        public static TickHandle SubscribeAsHandle(Action action, PlayerLoopTiming loopTiming = PlayerLoopTiming.Update)
+        public static TickHandle SubscribeAsHandle(Action action, LoopTiming loopTiming = LoopTiming.Update)
         {
             if (!IsInitialized)
             {
@@ -111,18 +117,34 @@ namespace UnityTickDispatcher
 
             var processing = loopTiming switch
             {
-                PlayerLoopTiming.FixedUpdate => _instance._fixedProcessing,
-                PlayerLoopTiming.Update => _instance._updateProcessing,
-                PlayerLoopTiming.LastUpdate => _instance._lastUpdateProcessing,
-                PlayerLoopTiming.LateUpdate => _instance._lateUpdateProcessing,
-                PlayerLoopTiming.LastLateUpdate => _instance._lastLateUpdateProcessing,
+                LoopTiming.FixedUpdate => _instance._fixedProcessing,
+                LoopTiming.Update => _instance._updateProcessing,
+                LoopTiming.LastUpdate => _instance._lastUpdateProcessing,
+                LoopTiming.LateUpdate => _instance._lateUpdateProcessing,
+                LoopTiming.LastLateUpdate => _instance._lastLateUpdateProcessing,
 
                 _ => null
             };
 
-            return processing == null ? default : processing.AddHandle(action);
+            return processing?.AddHandle(action) ?? default;
         }
 
-        private bool FastContains(PlayerLoopTiming whole, PlayerLoopTiming part) => (whole & part) == part;
+        public static void SubscribeAsHandle(Action action, ref TickHandle handle, LoopTiming loopTiming = LoopTiming.Update)
+        {
+            handle.Dispose();
+
+            var processing = loopTiming switch
+            {
+                LoopTiming.FixedUpdate => _instance._fixedProcessing,
+                LoopTiming.Update => _instance._updateProcessing,
+                LoopTiming.LastUpdate => _instance._lastUpdateProcessing,
+                LoopTiming.LateUpdate => _instance._lateUpdateProcessing,
+                LoopTiming.LastLateUpdate => _instance._lastLateUpdateProcessing,
+
+                _ => null
+            };
+
+            handle = IsInitialized ? processing?.AddHandle(action) ?? default : default;
+        }
     }
 }

@@ -3,7 +3,7 @@ using System;
 namespace UnityTickDispatcher
 {
     [Flags]
-    public enum PlayerLoopTiming
+    public enum LoopTiming
     {
         None = 0,
         FixedUpdate = 1 << 3,
