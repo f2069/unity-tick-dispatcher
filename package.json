@@ -1,0 +1,10 @@
+{
+  "name": "com.f2069.unitytickdispatcher",
+  "displayName": "Unity Tick Dispatcher",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "dependencies": {},
+  "description": "Tick dispatcher for Single Update for Unity",
+  "keywords": ["Unity", "extensions"],
+  "license": "MIT"
+}
