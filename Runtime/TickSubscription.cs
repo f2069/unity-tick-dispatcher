@@ -2,7 +2,7 @@ using System;
 
 namespace UnityTickDispatcher
 {
-    public sealed class TickSubscription : IDisposable
+    internal sealed class TickSubscription : IDisposable
     {
         private TickHandle _handle;
 

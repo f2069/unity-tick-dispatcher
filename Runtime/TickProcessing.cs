@@ -1,5 +1,3 @@
-using Gatekeeper.General.Extensions;
-using Gatekeeper.StaticDataHolders;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -7,17 +5,17 @@ using UnityEngine;
 
 namespace UnityTickDispatcher
 {
-    public sealed class TickProcessing
+    internal sealed class TickProcessing
     {
-        private const int InitialTicksCapacity = SizeConstants.SIZE_500;
-        private const int InitialBufferCapacity = SizeConstants.SIZE_100;
+        private const int InitialTicksCapacity = 500;
+        private const int InitialBufferCapacity = 100;
 
         private readonly TickPool _pool;
         private readonly List<TickData> _ticks = new List<TickData>(InitialTicksCapacity);
         private readonly List<TickData> _returnToPoolBuffer = new List<TickData>(InitialBufferCapacity);
 
-        private Queue<TickData> _queueWrite = new Queue<TickData>(SizeConstants.SIZE_100);
-        private Queue<TickData> _queueRead = new Queue<TickData>(SizeConstants.SIZE_100);
+        private Queue<TickData> _queueWrite = new Queue<TickData>(100);
+        private Queue<TickData> _queueRead = new Queue<TickData>(100);
 
         private readonly object _queueLock = new object();
         private int _tail;
@@ -144,7 +142,7 @@ namespace UnityTickDispatcher
 
             _canBeTrim = false;
 
-            _ticks.RemoveNulls();
+            RemoveNulls(_ticks);
             _ticks.TrimExcess();
 
             _ticks.Capacity = _ticks.Capacity < InitialTicksCapacity
@@ -159,6 +157,18 @@ namespace UnityTickDispatcher
             _returnToPoolBuffer.Capacity = _returnToPoolBuffer.Capacity < InitialBufferCapacity
                 ? InitialBufferCapacity
                 : _returnToPoolBuffer.Capacity;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RemoveNulls<T>(List<T> target)
+        {
+            for (var i = target.Count - 1; i >= 0; i--)
+            {
+                if (target[i] == null)
+                {
+                    target.RemoveAt(i);
+                }
+            }
         }
     }
 }
